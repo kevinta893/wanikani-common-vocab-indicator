@@ -12,7 +12,7 @@
 // @connect     *
 // ==/UserScript==
 
-console.log('/// start of WK Common Vocab Indicator');
+console.log('WK Common Vocab Indicator started');
 
 
 var css = 
@@ -20,7 +20,7 @@ var css =
     '    position: absolute;' +
     '    padding: 0px 5px 2px;' +
     '    top: 40px;' +
-    '    left: 20px;' +
+    '    right: 20px;' +
     '    -webkit-border-radius: 3px;' +
     '    -moz-border-radius: 3px;' +
     '    border-radius: 3px;' +
@@ -37,6 +37,7 @@ var css =
     '    background-color: white;' +
     '    opacity: 0.4;' +
     '    color: #a100f1;' +
+    '    visibility: hidden;' +
     '}' +
     '.common-indicator-item.common {' +
     '    background-color: white;' +
@@ -46,6 +47,7 @@ var css =
     '    background-color: transparent;' +
     '    color: white;' +
     '    opacity: 0.5;' +
+    '    visibility: hidden;' +
     '}';
 
 var jishoApiUrl = "http://jisho.org/api/v1/search/words?keyword=";
