@@ -45,7 +45,6 @@ var css =
     '    background-color: white;' +
     '    opacity: 0.4;' +
     '    color: #a100f1;' +
-    '    visibility: hidden;' +
     '}' +
     '.common-indicator-item.common {' +
     '    background-color: white;' +
@@ -181,6 +180,7 @@ function fetchJishoData(vocab) {
   var cacheValue = jishoCacher.get(vocab);
   if (cacheValue != null){
     setCommonIndicator(cacheValue);
+    return;
   }
 
   //Cache miss, fetch from jisho
