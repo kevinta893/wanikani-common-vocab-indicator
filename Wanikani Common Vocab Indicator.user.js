@@ -153,7 +153,7 @@ function addStyle(aCss) {
 
 var jishoApiUrl = "http://jisho.org/api/v1/search/words?keyword=";
 var jishoSearchUrl = "http://jisho.org/search/";
-var cacheTtl = 1000 * 60 * 60 * 24 * 21;            //21 days cache expiry
+var cacheTtl = 1000 * 60 * 60 * 24 * 28;            //28 day cache expiry
 var jishoCacher;
 
 function initJishoRepo(){
