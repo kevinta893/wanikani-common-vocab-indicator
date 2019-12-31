@@ -14,7 +14,7 @@
 // ==/UserScript==
 
 
-function init(){
+function init() {
   console.log('WK Common Vocab Indicator started');
   initUi();
   initJishoRepo();
@@ -23,39 +23,39 @@ function init(){
 //====================================================
 //UI
 
-var css = 
-    '.common-indicator-item {' +
-    '    position: absolute;' +
-    '    padding: 0px 5px 2px;' +
-    '    top: 40px;' +
-    '    right: 20px;' +
-    '    -webkit-border-radius: 3px;' +
-    '    -moz-border-radius: 3px;' +
-    '    border-radius: 3px;' +
-    '    z-index: 100;' +
-    '    letter-spacing: 0;' +
-    '    opacity: 0.8;' +
-    '    text-decoration: none;' +
-    '}' +
-    '.common-indicator-item.hide {' +
-    '    background-color: transparent;' +
-    '    color: transparent;' +
-    '}' +
-    '.common-indicator-item.fetching {' +
-    '    background-color: white;' +
-    '    opacity: 0.4;' +
-    '    color: #a100f1;' +
-    '}' +
-    '.common-indicator-item.common {' +
-    '    background-color: white;' +
-    '    color: #a100f1;' +
-    '}' +
-    '.common-indicator-item.uncommon {' +
-    '    background-color: transparent;' +
-    '    color: white;' +
-    '    opacity: 0.5;' +
-    '    visibility: hidden;' +
-    '}';
+var css =
+  '.common-indicator-item {' +
+  '    position: absolute;' +
+  '    padding: 0px 5px 2px;' +
+  '    top: 40px;' +
+  '    right: 20px;' +
+  '    -webkit-border-radius: 3px;' +
+  '    -moz-border-radius: 3px;' +
+  '    border-radius: 3px;' +
+  '    z-index: 100;' +
+  '    letter-spacing: 0;' +
+  '    opacity: 0.8;' +
+  '    text-decoration: none;' +
+  '}' +
+  '.common-indicator-item.hide {' +
+  '    background-color: transparent;' +
+  '    color: transparent;' +
+  '}' +
+  '.common-indicator-item.fetching {' +
+  '    background-color: white;' +
+  '    opacity: 0.4;' +
+  '    color: #a100f1;' +
+  '}' +
+  '.common-indicator-item.common {' +
+  '    background-color: white;' +
+  '    color: #a100f1;' +
+  '}' +
+  '.common-indicator-item.uncommon {' +
+  '    background-color: transparent;' +
+  '    color: white;' +
+  '    opacity: 0.5;' +
+  '    visibility: hidden;' +
+  '}';
 
 var allClasses = {
   hide: {
@@ -76,37 +76,37 @@ var allClasses = {
   }
 };
 
-function initUi(){
+function initUi() {
   addStyle(css);
 
   $('#question').append('<div id="common-indicator" class="common-indicator-item"></div>');
   $('#lessons').append('<div id="common-indicator" class="common-indicator-item"></div>');
 
   //every time item changes, look up vocabulary from jisho.org
-  $.jStorage.listenKeyChange('currentItem', function(){
-     var currentItem = $.jStorage.get('currentItem');
-     var vocab = currentItem.voc;
+  $.jStorage.listenKeyChange('currentItem', function () {
+    var currentItem = $.jStorage.get('currentItem');
+    var vocab = currentItem.voc;
 
-     // Check if item is not vocab
-     if (currentItem.on || currentItem.kun) {
+    // Check if item is not vocab
+    if (currentItem.on || currentItem.kun) {
       setHideIndicator();
       return;
-     }
+    }
 
-     fetchJishoData(vocab);
+    fetchJishoData(vocab);
   });
 
-  $.jStorage.listenKeyChange('l/currentLesson', function(){
+  $.jStorage.listenKeyChange('l/currentLesson', function () {
     var currentLesson = $.jStorage.get('l/currentLesson');
     var vocab = currentLesson.voc;
 
     // Check if item is not vocab
-     if (currentLesson.on || currentLesson.kun) {
+    if (currentLesson.on || currentLesson.kun) {
       setHideIndicator();
       return;
-     }
+    }
 
-     fetchJishoData(vocab);
+    fetchJishoData(vocab);
   });
 }
 
@@ -118,11 +118,11 @@ function setCommonIndicator(isCommon) {
   }
 }
 
-function setFetchingIndicator(){
+function setFetchingIndicator() {
   setClassAndText(allClasses.fetching);
 }
 
-function setHideIndicator(){
+function setHideIndicator() {
   setClassAndText(allClasses.hide);
 }
 
@@ -156,37 +156,37 @@ var jishoSearchUrl = "http://jisho.org/search/";
 var cacheTtl = 1000 * 60 * 60 * 24 * 28;            //28 day cache expiry
 var jishoCacher;
 
-function initJishoRepo(){
+function initJishoRepo() {
   //Check if we can use Store.js
-  if (!store.enabled){
+  if (!store.enabled) {
     console.log("Failed to load Store.js because it is being runned on a non-modern browser.");
   }
 
   //Configure store.js to expire values
   var storeWithExpiration = {
-    set: function(key, val, exp) {
+    set: function (key, val, exp) {
       //expiry time is in milliseconds
-      store.set(key, { val:val, exp:exp, time:new Date().getTime() })
+      store.set(key, { val: val, exp: exp, time: new Date().getTime() })
     },
-    get: function(key) {
+    get: function (key) {
       var info = store.get(key)
       if (!info) { return null }
       if (new Date().getTime() - info.time > info.exp) { return null }
       return info.val
     },
-    clearAll: function(){
+    clearAll: function () {
       store.clearAll();
     }
   }
 
-  //Setup cache
+  //Setup cacher
   jishoCacher = storeWithExpiration;
 }
 
 function fetchJishoData(vocab) {
   //Check the cache if we already have data
   var cacheValue = jishoCacher.get(vocab);
-  if (cacheValue != null){
+  if (cacheValue != null) {
     setCommonIndicator(cacheValue);
     return;
   }
@@ -194,26 +194,27 @@ function fetchJishoData(vocab) {
   //Cache miss, fetch from jisho
   setFetchingIndicator();
   GM_xmlhttpRequest({
-      method: 'get',
-      url: jishoApiUrl + vocab,
-      responseType: 'json',
-      onload: function(response) {
-        var isCommon = response.response.data[0].is_common;
-        saveInCache(vocab, isCommon);
-        setCommonIndicator(isCommon);
-      },
-      onerror: function(error){
-          console.log('Jisho error: ', error);
-      }
+    method: 'get',
+    url: jishoApiUrl + vocab,
+    responseType: 'json',
+    onload: function (response) {
+      var isCommon = response.response.data[0].is_common;
+      saveInCache(vocab, isCommon);
+      setCommonIndicator(isCommon);
+    },
+    onerror: function (error) {
+      console.log('Jisho error: ', error);
+    }
   });
 }
 
-function saveInCache(key, value){
+function saveInCache(key, value) {
   jishoCacher.set(key, value, cacheTtl);
 }
 
-function clearCache(){
+function clearJishoCache() {
   jishoCacher.clearAll();
+  console.log("Common indicator cache cleared.")
 }
 
 //====================================================
