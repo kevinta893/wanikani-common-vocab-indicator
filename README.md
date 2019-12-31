@@ -7,4 +7,5 @@ Original Author: dtwigs
 ## Changes
 
 1. Move indicator to the right side
-2. Hide indicator it is not a common word or unknown word
+2. Hide indicator it is not a common word
+3. Add cacher (html5 local storage) to reduce calls to the Jisho Api

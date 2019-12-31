@@ -89,8 +89,8 @@ function initUi(){
 
      // Check if item is not vocab
      if (currentItem.on || currentItem.kun) {
-        setClassAndText(allClasses.hide);
-        return;
+      setHideIndicator();
+      return;
      }
 
      fetchJishoData(vocab);
@@ -102,8 +102,8 @@ function initUi(){
 
     // Check if item is not vocab
      if (currentLesson.on || currentLesson.kun) {
-        setClassAndText(allClasses.hide);
-        return;
+      setHideIndicator();
+      return;
      }
 
      fetchJishoData(vocab);
@@ -112,16 +112,24 @@ function initUi(){
 
 function setCommonIndicator(isCommon) {
   if (isCommon) {
-      setClassAndText(allClasses.common);
+    setClassAndText(allClasses.common);
   } else {
-      setClassAndText(allClasses.uncommon);
+    setClassAndText(allClasses.uncommon);
   }
+}
+
+function setFetchingIndicator(){
+  setClassAndText(allClasses.fetching);
+}
+
+function setHideIndicator(){
+  setClassAndText(allClasses.hide);
 }
 
 function setClassAndText(aObj) {
   var $wrapper = $('#common-indicator');
   for (var klass in allClasses) {
-      $wrapper.removeClass(klass);
+    $wrapper.removeClass(klass);
   }
 
   $wrapper.text(aObj.text).addClass(aObj.klass);
@@ -184,7 +192,7 @@ function fetchJishoData(vocab) {
   }
 
   //Cache miss, fetch from jisho
-  setClassAndText(allClasses.fetching);
+  setFetchingIndicator();
   GM_xmlhttpRequest({
       method: 'get',
       url: jishoApiUrl + vocab,
@@ -207,5 +215,6 @@ function saveInCache(key, value){
 function clearCache(){
   jishoCacher.clearAll();
 }
+
 //====================================================
 init();
