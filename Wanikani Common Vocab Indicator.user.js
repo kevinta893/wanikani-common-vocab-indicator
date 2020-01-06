@@ -127,12 +127,12 @@ function setHideIndicator() {
 }
 
 function setClassAndText(aObj) {
-  var $wrapper = $('#common-indicator');
+  var indicator = $('#common-indicator');
   for (var klass in allClasses) {
-    $wrapper.removeClass(klass);
+    indicator.removeClass(klass);
   }
 
-  $wrapper.text(aObj.text).addClass(aObj.klass);
+  indicator.text(aObj.text).addClass(aObj.klass);
 }
 
 function addStyle(aCss) {
@@ -203,7 +203,10 @@ function fetchJishoData(vocab) {
       setCommonIndicator(isCommon);
     },
     onerror: function (error) {
-      console.log('Jisho error: ', error);
+      console.error('Jisho error: ', error);
+    },
+    ontimeout: function(error) {
+      console.error('Jisho timeout error: ', error);
     }
   });
 }
