@@ -198,10 +198,6 @@ function fetchJishoData(vocab) {
     url: jishoApiUrl + vocab,
     responseType: 'json',
     onload: function (response) {
-      if (response.response.data[0].hasOwnProperty('is_common')){
-        setCommonIndicator(false);
-        return;
-      }
       var isCommon = response.response.data[0].is_common;
       saveInCache(vocab, isCommon);
       setCommonIndicator(isCommon);
