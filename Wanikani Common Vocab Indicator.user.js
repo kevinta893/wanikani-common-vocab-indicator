@@ -85,27 +85,27 @@ function initUi() {
   //every time item changes, look up vocabulary from jisho.org
   $.jStorage.listenKeyChange('currentItem', function () {
     var currentItem = $.jStorage.get('currentItem');
-    var vocab = currentItem.voc;
 
     // Check if item is not vocab
-    if (currentItem.on || currentItem.kun) {
+    if (!currentItem.hasOwnProperty('voc')) {
       setHideIndicator();
       return;
     }
 
+    var vocab = currentItem.voc;
     fetchJishoData(vocab);
   });
 
   $.jStorage.listenKeyChange('l/currentLesson', function () {
     var currentLesson = $.jStorage.get('l/currentLesson');
-    var vocab = currentLesson.voc;
 
     // Check if item is not vocab
-    if (currentLesson.on || currentLesson.kun) {
+    if (!currentLesson.hasOwnProperty('voc')) {
       setHideIndicator();
       return;
     }
 
+    var vocab = currentLesson.voc;
     fetchJishoData(vocab);
   });
 }
