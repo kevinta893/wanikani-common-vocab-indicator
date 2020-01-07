@@ -198,6 +198,14 @@ function fetchJishoData(vocab) {
     url: jishoApiUrl + vocab,
     responseType: 'json',
     onload: function (response) {
+      //No jisho data
+      if (response.response.data.length == 0){
+        console.log('Vocab not found on Jisho, defaulting to is_common=false for: ' + vocab);
+        saveInCache(vocab, false);
+        return;
+      }
+
+      //Has jisho data, use is_common
       var isCommon = response.response.data[0].is_common;
       saveInCache(vocab, isCommon);
       setCommonIndicator(isCommon);
