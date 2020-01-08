@@ -201,7 +201,9 @@ function fetchJishoData(vocab) {
       //No jisho data
       if (response.response.data.length == 0){
         console.log('Vocab not found on Jisho, defaulting to is_common=false for: ' + vocab);
-        saveInCache(vocab, false);
+        var defaultCommon = false;
+        setCommonIndicator(defaultCommon);
+        saveInCache(vocab, defaultCommon);
         return;
       }
 
