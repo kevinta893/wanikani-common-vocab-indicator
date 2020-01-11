@@ -162,12 +162,15 @@ function initJishoRepo() {
 
   //Configure store.js to expire values
   var storeWithExpiration = {
+    namespaceKey: 'jishoIsCommonCache-',
     set: function (key, val, exp) {
       //expiry time is in milliseconds
-      store.set(key, { val: val, exp: exp, time: new Date().getTime() })
+      var storeKey = this.namespaceKey + key;
+      store.set(storeKey, { val: val, exp: exp, time: new Date().getTime() })
     },
     get: function (key) {
-      var info = store.get(key)
+      var storeKey = this.namespaceKey + key;
+      var info = store.get(storeKey)
       if (!info) { return null }
       if (new Date().getTime() - info.time > info.exp) { return null }
       return info.val
