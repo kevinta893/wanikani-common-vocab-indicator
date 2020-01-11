@@ -5,10 +5,9 @@
 // @description Show whether the vocabulary word is common or not according to Jisho.org
 // @run-at      document-end
 // @require     https://cdn.jsdelivr.net/npm/store@2.0.12/dist/store.modern.min.js
-// @include     *://www.wanikani.com/review/session*
-// @include     *://www.wanikani.com/lesson/session*
+// @include     https://www.wanikani.com/review/session
+// @include     https://www.wanikani.com/lesson/session
 // @version     0.0.4
-// @run-at      document-end
 // @grant       GM_xmlhttpRequest
 // @connect     *
 // ==/UserScript==
@@ -152,7 +151,6 @@ function addStyle(aCss) {
 // Jisho repository
 
 var jishoApiUrl = "http://jisho.org/api/v1/search/words?keyword=";
-var jishoSearchUrl = "http://jisho.org/search/";
 var cacheTtl = 1000 * 60 * 60 * 24 * 28;            //28 day cache expiry
 var jishoCacher;
 
