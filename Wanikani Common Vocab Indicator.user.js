@@ -155,33 +155,7 @@ var cacheTtl = 1000 * 60 * 60 * 24 * 28;            //28 day cache expiry
 var jishoCacher;
 
 function initJishoRepo() {
-  //Check if we can use Store.js
-  if (!store.enabled) {
-    console.log("Failed to load Store.js because it is being runned on a non-modern browser.");
-  }
-
-  //Configure store.js to expire values
-  var storeWithExpiration = {
-    namespaceKey: 'jishoIsCommonCache-',
-    set: function (key, val, exp) {
-      //expiry time is in milliseconds
-      var storeKey = this.namespaceKey + key;
-      store.set(storeKey, { val: val, exp: exp, time: new Date().getTime() })
-    },
-    get: function (key) {
-      var storeKey = this.namespaceKey + key;
-      var info = store.get(storeKey)
-      if (!info) { return null }
-      if (new Date().getTime() - info.time > info.exp) { return null }
-      return info.val
-    },
-    clearAll: function () {
-      store.clearAll();
-    }
-  }
-
-  //Setup cacher
-  jishoCacher = storeWithExpiration;
+  jishoCacher = new JishoCacher();
 }
 
 function fetchJishoData(vocab) {
@@ -229,6 +203,36 @@ function saveInCache(key, value) {
 function clearJishoCache() {
   jishoCacher.clearAll();
   console.log("Common indicator cache cleared.")
+}
+
+//====================================================
+//Cacher
+
+class JishoCacher{
+  //Namespace for the local storage
+  namespaceKey = 'jishoIsCommonCache-';
+
+  constructor(){
+    //Check if we can use Store.js
+    if (!store.enabled) {
+      console.log("Failed to load Store.js because it is being runned on a non-modern browser.");
+    }
+  }
+  set(key, val, exp) {
+    //expiry time is in milliseconds
+    var storeKey = this.namespaceKey + key;
+    store.set(storeKey, { val: val, exp: exp, time: new Date().getTime() })
+  }
+  get(key) {
+    var storeKey = this.namespaceKey + key;
+    var info = store.get(storeKey)
+    if (!info) { return null }
+    if (new Date().getTime() - info.time > info.exp) { return null }
+    return info.val
+  }
+  clearAll() {
+    store.clearAll();
+  }
 }
 
 //====================================================
