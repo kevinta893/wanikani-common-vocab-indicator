@@ -80,14 +80,14 @@ var allClasses = {
 };
 
 function initUi() {
+  //Add indicator UI
   addStyle(css);
-
   $('#question').append('<div id="common-indicator" class="common-indicator-item"></div>');
   $('#lessons').append('<div id="common-indicator" class="common-indicator-item"></div>');
 
-  //every time item changes, look up vocabulary from jisho.org
-  $.jStorage.listenKeyChange('currentItem', function () {
-    var currentItem = $.jStorage.get('currentItem');
+  //Every time item changes, look up vocabulary from jisho.org
+  var itemChangedEvent = function(key, callback){
+    var currentItem = $.jStorage.get(key);
 
     // Check if item is not vocab
     if (!currentItem.hasOwnProperty('voc')) {
@@ -97,20 +97,11 @@ function initUi() {
 
     var vocab = currentItem.voc;
     fetchJishoData(vocab);
-  });
+  };
 
-  $.jStorage.listenKeyChange('l/currentLesson', function () {
-    var currentLesson = $.jStorage.get('l/currentLesson');
-
-    // Check if item is not vocab
-    if (!currentLesson.hasOwnProperty('voc')) {
-      setHideIndicator();
-      return;
-    }
-
-    var vocab = currentLesson.voc;
-    fetchJishoData(vocab);
-  });
+  //Item Changed event
+  $.jStorage.listenKeyChange('currentItem', itemChangedEvent);
+  $.jStorage.listenKeyChange('l/currentLesson', itemChangedEvent);
 }
 
 function setCommonIndicator(isCommon) {
