@@ -22,39 +22,43 @@ function init() {
 //====================================================
 //UI
 
-var css =
-  '.common-indicator-item {' +
-  '    position: absolute;' +
-  '    padding: 0px 5px 2px;' +
-  '    top: 40px;' +
-  '    right: 20px;' +
-  '    -webkit-border-radius: 3px;' +
-  '    -moz-border-radius: 3px;' +
-  '    border-radius: 3px;' +
-  '    z-index: 100;' +
-  '    letter-spacing: 0;' +
-  '    opacity: 0.8;' +
-  '    text-decoration: none;' +
-  '}' +
-  '.common-indicator-item.hide {' +
-  '    background-color: transparent;' +
-  '    color: transparent;' +
-  '}' +
-  '.common-indicator-item.fetching {' +
-  '    background-color: white;' +
-  '    opacity: 0.4;' +
-  '    color: #a100f1;' +
-  '}' +
-  '.common-indicator-item.common {' +
-  '    background-color: white;' +
-  '    color: #a100f1;' +
-  '}' +
-  '.common-indicator-item.uncommon {' +
-  '    background-color: transparent;' +
-  '    color: white;' +
-  '    opacity: 0.5;' +
-  '    visibility: hidden;' +
-  '}';
+var css = `
+  .common-indicator-item {
+    position: absolute;
+    padding: 0px 5px 2px;
+    top: 40px;
+    right: 20px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    z-index: 100;
+    letter-spacing: 0;
+    opacity: 0.8;
+    text-decoration: none;
+  }
+
+  .common-indicator-item.hide {
+    background-color: transparent;
+    color: transparent;
+  }
+
+  .common-indicator-item.fetching {
+    background-color: white;
+    opacity: 0.4;
+    color: #a100f1;
+  }
+
+  .common-indicator-item.common {
+    background-color: white;
+    color: #a100f1;
+  }
+
+  .common-indicator-item.uncommon {
+    background-color: transparent;
+    color: white;
+    opacity: 0.5;
+    visibility: hidden;
+  }`;
 
 var allClasses = {
   hide: {
