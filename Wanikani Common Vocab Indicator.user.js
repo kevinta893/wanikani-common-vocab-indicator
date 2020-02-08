@@ -17,6 +17,15 @@ function init() {
   console.log('WK Common Vocab Indicator started');
   initUi();
   initJishoRepo();
+
+  // Expose the clear cache function
+  // To clear the cache use this command in your brower's developer tools console:
+  // "window.commonVocabIndicator.clearCache()"
+  var commonVocabIndicatorExports = unsafeWindow.commonVocabIndicator = {};
+  commonVocabIndicatorExports.clearCache = function (){
+    clearJishoCache();
+    location.reload();
+  }
 }
 
 //====================================================
@@ -197,7 +206,7 @@ function saveInCache(key, value) {
 
 function clearJishoCache() {
   jishoCacher.clearAll();
-  console.log("Common indicator cache cleared.")
+  console.log("Jisho Common indicator cache cleared.")
 }
 
 //====================================================
