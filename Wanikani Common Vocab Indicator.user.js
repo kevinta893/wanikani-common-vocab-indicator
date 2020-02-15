@@ -40,7 +40,7 @@ var css = `
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
     border-radius: 3px;
-    z-index: 100;
+    z-index: 99;
     letter-spacing: 0;
     opacity: 0.8;
     text-decoration: none;
