@@ -4,28 +4,23 @@
 // @author      dtwigs
 // @description Show whether the vocabulary word is common or not according to Jisho.org
 // @run-at      document-end
-// @require     https://cdn.jsdelivr.net/npm/store@2.0.12/dist/store.modern.min.js
 // @include     https://www.wanikani.com/review/session
 // @include     https://www.wanikani.com/lesson/session
 // @version     0.0.4
 // @grant       GM_xmlhttpRequest
+// @grant       GM_setValue
+// @grant       GM_getValue
 // @connect     *
 // ==/UserScript==
 
 
 function init() {
-  console.log('WK Common Vocab Indicator started');
   initUi();
   initJishoRepo();
+  console.log('WK Common Vocab Indicator started');
 
-  // Expose the clear cache function
-  // To clear the cache use this command in your brower's developer tools console:
-  // "window.commonVocabIndicator.clearCache()"
-  var commonVocabIndicatorExports = unsafeWindow.commonVocabIndicator = {};
-  commonVocabIndicatorExports.clearCache = function (){
-    clearJishoCache();
-    location.reload();
-  }
+  // To clear the cache in Tampermonkey, 
+  // use Developer > Factory Reset in the script editor
 }
 
 //====================================================
@@ -210,32 +205,29 @@ function clearJishoCache() {
 }
 
 //====================================================
-//Cacher
+// Cacher
 
 class JishoCacher{
   //Namespace for the local storage
-  namespaceKey = 'jishoIsCommonCache-';
+  namespaceKey = 'jishoIsCommonCache';
 
-  constructor(){
-    //Check if we can use Store.js
-    if (!store.enabled) {
-      console.log("Failed to load Store.js because it is being runned on a non-modern browser.");
-    }
-  }
+  constructor(){ }
+
   set(key, val, exp) {
     //expiry time is in milliseconds
-    var storeKey = this.namespaceKey + key;
-    store.set(storeKey, { val: val, exp: exp, time: new Date().getTime() })
+    var storageKey = this.generateStorageKey(key);
+    GM_setValue(storageKey, { val: val, exp: exp, time: new Date().getTime() })
   }
+
   get(key) {
-    var storeKey = this.namespaceKey + key;
-    var info = store.get(storeKey)
-    if (!info) { return null }
-    if (new Date().getTime() - info.time > info.exp) { return null }
-    return info.val
+    var storageKey = this.generateStorageKey(key);
+    var info = GM_getValue(storageKey);
+    if (!info) { return null; }
+    if (new Date().getTime() - info.time > info.exp) { return null; }
+    return info.val;
   }
-  clearAll() {
-    store.clearAll();
+  generateStorageKey(key){
+    return this.namespaceKey + '/' + key;
   }
 }
 
