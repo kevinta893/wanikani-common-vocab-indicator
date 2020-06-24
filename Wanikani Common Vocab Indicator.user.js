@@ -227,7 +227,7 @@ class JishoCacher{
     return info.val;
   }
   generateStorageKey(key){
-    return this.namespaceKey + '/' + key;
+    return `${this.namespaceKey}/${key}`;
   }
 }
 
