@@ -150,16 +150,16 @@ function addStyle(aCss) {
 // Jisho repository
 
 var jishoApiUrl = "http://jisho.org/api/v1/search/words?keyword=";
-var cacheTtl = 1000 * 60 * 60 * 24 * 28;            //28 day cache expiry
+var cacheTtlMillis = 1000 * 60 * 60 * 24 * 28;            //28 day cache expiry
 var jishoCacher;
 
 function initJishoRepo() {
   jishoCacher = new JishoCacher();
 }
 
-function fetchJishoData(vocab) {
+function fetchJishoData(requestedVocab) {
   //Check the cache if we already have data
-  var cacheValue = jishoCacher.get(vocab);
+  var cacheValue = jishoCacher.get(requestedVocab);
   if (cacheValue != null) {
     setCommonIndicator(cacheValue);
     return;
@@ -167,6 +167,45 @@ function fetchJishoData(vocab) {
 
   //Cache miss, fetch from jisho
   setFetchingIndicator();
+
+  var successCallback = function(vocab, isCommon){
+    //Unknown, assign default
+    if (isCommon == null){
+      var defaultCommon = false;
+      console.log('Vocab not found, defaulting to is_common=false for: ' + vocab);
+      setCommonIndicator(defaultCommon);
+      saveInCache(vocab, defaultCommon);
+      return;
+    }
+
+    //Has isCommon data
+    saveInCache(vocab, isCommon);
+    setCommonIndicator(isCommon);
+  };
+
+  getJishoIsCommon(requestedVocab, successCallback);
+}
+
+function saveInCache(key, value) {
+  jishoCacher.set(key, value, cacheTtlMillis);
+}
+
+function clearJishoCache() {
+  jishoCacher.clearAll();
+  console.log("Jisho Common indicator cache cleared.")
+}
+
+//====================================================
+//Jisho API requester
+
+/**
+ * Determines if a vocab work is common or not using the Jisho API
+ * @param {*} vocab The vocab to lookup the is_common data for
+ * @param {*} successCallback The callback when the Jisho request is a success. 
+ * Calls back with (string vocab, nullable<bool> isCommon). True if common, false otherwise. 
+ * If no data (unknown word), then undefined is returned.
+ */
+function getJishoIsCommon(vocab, successCallback){
   GM_xmlhttpRequest({
     method: 'get',
     url: jishoApiUrl + vocab,
@@ -174,17 +213,11 @@ function fetchJishoData(vocab) {
     onload: function (response) {
       //No jisho data
       if (response.response.data.length == 0){
-        console.log('Vocab not found on Jisho, defaulting to is_common=false for: ' + vocab);
-        var defaultCommon = false;
-        setCommonIndicator(defaultCommon);
-        saveInCache(vocab, defaultCommon);
-        return;
+        successCallback(vocab, null);
       }
 
-      //Has jisho data, use is_common
       var isCommon = response.response.data[0].is_common;
-      saveInCache(vocab, isCommon);
-      setCommonIndicator(isCommon);
+      successCallback(vocab, isCommon);
     },
     onerror: function (error) {
       console.error('Jisho error: ', error);
@@ -193,15 +226,6 @@ function fetchJishoData(vocab) {
       console.error('Jisho timeout error: ', error);
     }
   });
-}
-
-function saveInCache(key, value) {
-  jishoCacher.set(key, value, cacheTtl);
-}
-
-function clearJishoCache() {
-  jishoCacher.clearAll();
-  console.log("Jisho Common indicator cache cleared.")
 }
 
 //====================================================
@@ -213,10 +237,10 @@ class JishoCacher{
 
   constructor(){ }
 
-  set(key, val, exp) {
+  set(key, val, expiryMillis) {
     //expiry time is in milliseconds
     var storageKey = this.generateStorageKey(key);
-    GM_setValue(storageKey, { val: val, exp: exp, time: new Date().getTime() })
+    GM_setValue(storageKey, { val: val, exp: expiryMillis, time: new Date().getTime() })
   }
 
   get(key) {
