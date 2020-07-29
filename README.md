@@ -9,8 +9,8 @@ Original Author: dtwigs
 ## Changes from original
 
 1. Move indicator to the right side
-2. Hide indicator it is not a common word
-3. Add cacher to reduce calls to the Jisho Api
+2. Hide indicator when it is not a common word
+3. Add cache to reduce calls to the Jisho API
 
 ## Clearing the IsCommon cache
 
