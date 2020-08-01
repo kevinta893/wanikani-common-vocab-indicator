@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Wanikani Common Vocab Indicator
-// @namespace   dtwigs
-// @author      dtwigs
+// @namespace   kevinta893
+// @author      kevinta893
 // @description Show whether the vocabulary word is common or not according to Jisho.org
 // @run-at      document-end
 // @include     https://www.wanikani.com/review/session
@@ -13,6 +13,7 @@
 // @connect     *
 // ==/UserScript==
 
+// Original Script by dtwigs
 
 function init() {
   initUi();
@@ -89,23 +90,22 @@ function initUi() {
   $('#question').append('<div id="common-indicator" class="common-indicator-item"></div>');
   $('#lessons').append('<div id="common-indicator" class="common-indicator-item"></div>');
 
-  //Every time item changes, look up vocabulary from jisho.org
-  var itemChangedEvent = function(key, callback){
-    var currentItem = $.jStorage.get(key);
-
-    // Check if item is not vocab
-    if (!currentItem.hasOwnProperty('voc')) {
-      setHideIndicator();
-      return;
-    }
-
-    var vocab = currentItem.voc;
-    fetchJishoData(vocab);
-  };
-
   //Item Changed event
   $.jStorage.listenKeyChange('currentItem', itemChangedEvent);
   $.jStorage.listenKeyChange('l/currentLesson', itemChangedEvent);
+}
+
+function itemChangedEvent(key, callback){
+  var currentItem = $.jStorage.get(key);
+
+  // Check if item is not vocab
+  if (!currentItem.hasOwnProperty('voc')) {
+    setHideIndicator();
+    return;
+  }
+
+  var vocab = currentItem.voc;
+  fetchJishoData(vocab);
 }
 
 function setCommonIndicator(isCommon) {
@@ -149,7 +149,7 @@ function addStyle(aCss) {
 //====================================================
 // Jisho repository
 
-var jishoApiUrl = "http://jisho.org/api/v1/search/words?keyword=";
+var jishoApiUrl = "https://jisho.org/api/v1/search/words?keyword=";
 var cacheTtlMillis = 1000 * 60 * 60 * 24 * 28;            //28 day cache expiry
 var jishoCacher;
 
@@ -188,11 +188,6 @@ function fetchJishoData(requestedVocab) {
 
 function saveInCache(key, value) {
   jishoCacher.set(key, value, cacheTtlMillis);
-}
-
-function clearJishoCache() {
-  jishoCacher.clearAll();
-  console.log("Jisho Common indicator cache cleared.")
 }
 
 //====================================================
@@ -246,8 +241,15 @@ class JishoCacher{
   get(key) {
     var storageKey = this.generateStorageKey(key);
     var info = GM_getValue(storageKey);
-    if (!info) { return null; }
-    if (new Date().getTime() - info.time > info.exp) { return null; }
+    if (!info) {
+      //Not cached
+      return null;
+    }
+    if (new Date().getTime() - info.time > info.exp) { 
+      //Cache expired
+      return null;
+    }
+    //Cached value
     return info.val;
   }
   generateStorageKey(key){
