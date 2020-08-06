@@ -112,7 +112,7 @@ class CommonIndicatorUi {
    * WaniKani item displayed
    */
   bindItemChangedEvent(handler) {
-    var itemChangedHandler = function (key){
+    var itemChangedHandler = function (key) {
       var wanikaniItem = $.jStorage.get(key);
       handler(wanikaniItem);
     };
@@ -170,7 +170,7 @@ class CommonIndicatorController {
   constructor(commonIndicatorView, isCommonRepository) {
     this.commonIndicatorView = commonIndicatorView;
     this.isCommonRepository = isCommonRepository;
-    this.isCommonCache = new IsCommonCacher('IsCommonCache');
+    this.isCommonCache = new IsCommonCacher('IsCommonCache', this.cacheTtlMillis);
 
     this.commonIndicatorView.bindItemChangedEvent((key) => {
       this.itemChangedEvent(key);
@@ -191,13 +191,14 @@ class CommonIndicatorController {
     var cacheValue = this.isCommonCache.get(vocab);
     if (cacheValue != null) {
       this.commonIndicatorView.setCommonIndicator(cacheValue);
+      return;
     }
 
     // No data, lookup in repository
     this.commonIndicatorView.setFetchingIndicator();
 
     this.isCommonRepository.getIsCommon(vocab).then((isCommon) => {
-      this.isCommonCache.set(vocab, isCommon);
+      this.isCommonCache.put(vocab, isCommon);
       this.commonIndicatorView.setCommonIndicator(isCommon);
     });
   }
@@ -255,7 +256,7 @@ class JishoIsCommonRequester {
 
         onload: function (response) {
           //No jisho data
-          var hasNoData = response.response.data.length == 0 || 
+          var hasNoData = response.response.data.length == 0 ||
             response.response.data[0] == null;
           if (hasNoData) {
             resolve(null);
@@ -285,15 +286,17 @@ class JishoIsCommonRequester {
 class IsCommonCacher {
   //Namespace for the cache storage
   namespaceKey;
+  cacheTtlMillis;
 
-  constructor(namespaceKey) {
+  constructor(namespaceKey, cacheTtlMillis) {
     this.namespaceKey = namespaceKey == null ? "" : namespaceKey;
+    this.cacheTtlMillis = cacheTtlMillis;
   }
 
-  set(key, val, expiryMillis) {
+  put(key, val) {
     //expiry time is in milliseconds
     var storageKey = this.generateStorageKey(key);
-    GM_setValue(storageKey, { val: val, exp: expiryMillis, time: new Date().getTime() })
+    GM_setValue(storageKey, { val: val, exp: this.cacheTtlMillis, time: new Date().getTime() })
   }
 
   get(key) {
