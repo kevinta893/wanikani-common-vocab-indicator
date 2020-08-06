@@ -2,22 +2,23 @@
 // @name        Wanikani Common Vocab Indicator
 // @namespace   kevinta893
 // @author      kevinta893
-// @description Show whether the vocabulary word is common or not according to Jisho.org
+// @description Show whether the vocabulary word is common or not according to Jisho.org . Original Script by dtwigs
 // @run-at      document-end
 // @include     https://www.wanikani.com/review/session
 // @include     https://www.wanikani.com/lesson/session
-// @version     0.0.4
+// @version     0.0.5
 // @grant       GM_xmlhttpRequest
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @connect     *
 // ==/UserScript==
 
-// Original Script by dtwigs
 
 function init() {
-  initUi();
-  initJishoRepo();
+  var commonIndicatorUi = new CommonIndicatorUi();
+  var isCommonRepository = new IsCommonRepository();
+  var commonIndicatorController = new CommonIndicatorController(commonIndicatorUi, isCommonRepository);
+
   console.log('WK Common Vocab Indicator started');
 
   // To clear the cache in Tampermonkey, 
@@ -27,7 +28,9 @@ function init() {
 //====================================================
 //UI
 
-var css = `
+class CommonIndicatorUi {
+
+  css = `
   .common-indicator-item {
     position: absolute;
     padding: 0px 5px 2px;
@@ -63,174 +66,229 @@ var css = `
     color: white;
     opacity: 0.5;
     visibility: hidden;
-  }`;
-
-var allClasses = {
-  hide: {
-    klass: 'hide',
-    text: '',
-  },
-  fetching: {
-    klass: 'fetching',
-    text: '...',
-  },
-  common: {
-    klass: 'common',
-    text: 'common'
-  },
-  uncommon: {
-    klass: 'uncommon',
-    text: 'not common',
   }
-};
+  `;
 
-function initUi() {
-  //Add indicator UI
-  addStyle(css);
-  $('#question').append('<div id="common-indicator" class="common-indicator-item"></div>');
-  $('#lessons').append('<div id="common-indicator" class="common-indicator-item"></div>');
+  indicatorClasses = {
+    hide: {
+      klass: 'hide',
+      text: '',
+    },
+    fetching: {
+      klass: 'fetching',
+      text: '...',
+    },
+    common: {
+      klass: 'common',
+      text: 'common'
+    },
+    uncommon: {
+      klass: 'uncommon',
+      text: 'not common',
+    }
+  };
 
-  //Item Changed event
-  $.jStorage.listenKeyChange('currentItem', itemChangedEvent);
-  $.jStorage.listenKeyChange('l/currentLesson', itemChangedEvent);
-}
+  questionIndicatorHtml = `
+    <div id="common-indicator" class="common-indicator-item"></div>
+  `;
+  lessonIndicatorHtml = `
+    <div id="common-indicator" class="common-indicator-item"></div>
+  `;
 
-function itemChangedEvent(key, callback){
-  var currentItem = $.jStorage.get(key);
+  commonIndicator;
 
-  // Check if item is not vocab
-  if (!currentItem.hasOwnProperty('voc')) {
-    setHideIndicator();
-    return;
-  }
+  constructor() {
+    //Add indicator UI
+    this.addStyle(this.css);
+    $('#question').append(this.questionIndicatorHtml);
+    $('#lessons').append(this.lessonIndicatorHtml);
 
-  var vocab = currentItem.voc;
-  fetchJishoData(vocab);
-}
-
-function setCommonIndicator(isCommon) {
-  if (isCommon) {
-    setClassAndText(allClasses.common);
-  } else {
-    setClassAndText(allClasses.uncommon);
-  }
-}
-
-function setFetchingIndicator() {
-  setClassAndText(allClasses.fetching);
-}
-
-function setHideIndicator() {
-  setClassAndText(allClasses.hide);
-}
-
-function setClassAndText(aObj) {
-  var indicator = $('#common-indicator');
-  for (var klass in allClasses) {
-    indicator.removeClass(klass);
+    this.commonIndicator = $('#common-indicator');
   }
 
-  indicator.text(aObj.text).addClass(aObj.klass);
+  /**
+   * Binds handler to event when the wanikani app changes item
+   * @param {function} handler Calls back the handler, with the current 
+   * WaniKani item displayed
+   */
+  bindItemChangedEvent(handler) {
+    var itemChangedHandler = function (key){
+      var wanikaniItem = $.jStorage.get(key);
+      handler(wanikaniItem);
+    };
+
+    $.jStorage.listenKeyChange('currentItem', itemChangedHandler);
+    $.jStorage.listenKeyChange('l/currentLesson', itemChangedHandler);
+  }
+
+  hideIndicator() {
+    this.setClassAndText(this.indicatorClasses.hide);
+  }
+
+  setFetchingIndicator() {
+    this.setClassAndText(this.indicatorClasses.fetching);
+  }
+
+  setCommonIndicator(isCommon) {
+    if (isCommon) {
+      this.setClassAndText(this.indicatorClasses.common);
+    } else {
+      this.setClassAndText(this.indicatorClasses.uncommon);
+    }
+  }
+
+  setClassAndText(aObj) {
+    for (var klass in this.indicatorClasses) {
+      this.commonIndicator.removeClass(klass);
+    }
+
+    this.commonIndicator.text(aObj.text).addClass(aObj.klass);
+  }
+
+  addStyle(aCss) {
+    var head, style;
+    head = document.getElementsByTagName('head')[0];
+    if (head) {
+      style = document.createElement('style');
+      style.setAttribute('type', 'text/css');
+      style.textContent = aCss;
+      head.appendChild(style);
+    }
+  }
 }
 
-function addStyle(aCss) {
-  var head, style;
-  head = document.getElementsByTagName('head')[0];
-  if (head) {
-    style = document.createElement('style');
-    style.setAttribute('type', 'text/css');
-    style.textContent = aCss;
-    head.appendChild(style);
-    return style;
+//====================================================
+// Common indicator Controller
+
+class CommonIndicatorController {
+
+  commonIndicatorView;
+  isCommonRepository;
+  isCommonCache;
+  cacheTtlMillis = 1000 * 60 * 60 * 24 * 28;            //28 day cache expiry
+
+  constructor(commonIndicatorView, isCommonRepository) {
+    this.commonIndicatorView = commonIndicatorView;
+    this.isCommonRepository = isCommonRepository;
+    this.isCommonCache = new IsCommonCacher('IsCommonCache');
+
+    this.commonIndicatorView.bindItemChangedEvent((key) => {
+      this.itemChangedEvent(key);
+    });
   }
-  return null;
+
+  itemChangedEvent(currentItem) {
+    // Item not vocab, hide indicator
+    if (!currentItem.hasOwnProperty('voc')) {
+      this.commonIndicatorView.hideIndicator();
+      return;
+    }
+
+    // Is vocab, lookup is common
+    var vocab = currentItem.voc;
+
+    // Check the cache if we already have data
+    var cacheValue = this.isCommonCache.get(vocab);
+    if (cacheValue != null) {
+      this.commonIndicatorView.setCommonIndicator(cacheValue);
+    }
+
+    // No data, lookup in repository
+    this.commonIndicatorView.setFetchingIndicator();
+
+    this.isCommonRepository.getIsCommon(vocab).then((isCommon) => {
+      this.isCommonCache.set(vocab, isCommon);
+      this.commonIndicatorView.setCommonIndicator(isCommon);
+    });
+  }
 }
 
 //====================================================
 // Jisho repository
 
-var jishoApiUrl = "https://jisho.org/api/v1/search/words?keyword=";
-var cacheTtlMillis = 1000 * 60 * 60 * 24 * 28;            //28 day cache expiry
-var jishoCacher;
+class IsCommonRepository {
 
-function initJishoRepo() {
-  jishoCacher = new JishoCacher();
-}
-
-function fetchJishoData(requestedVocab) {
-  //Check the cache if we already have data
-  var cacheValue = jishoCacher.get(requestedVocab);
-  if (cacheValue != null) {
-    setCommonIndicator(cacheValue);
-    return;
+  constructor() {
+    this.isCommonRequester = new JishoIsCommonRequester();
   }
 
-  //Cache miss, fetch from jisho
-  setFetchingIndicator();
+  async getIsCommon(requestedVocab, callback) {
+    try {
+      var isCommon = await this.isCommonRequester.getJishoIsCommon(requestedVocab);
 
-  var successCallback = function(vocab, isCommon){
-    //Unknown, assign default
-    if (isCommon == null){
-      var defaultCommon = false;
-      console.log('Vocab not found, defaulting to is_common=false for: ' + vocab);
-      setCommonIndicator(defaultCommon);
-      saveInCache(vocab, defaultCommon);
-      return;
+      //Unknown, assign default
+      if (isCommon == null) {
+        var defaultCommon = false;
+        console.log('Vocab not found, defaulting to is_common=false for: ' + requestedVocab);
+        return defaultCommon;
+      }
+
+      //Has isCommon data
+      return isCommon;
     }
-
-    //Has isCommon data
-    saveInCache(vocab, isCommon);
-    setCommonIndicator(isCommon);
-  };
-
-  getJishoIsCommon(requestedVocab, successCallback);
-}
-
-function saveInCache(key, value) {
-  jishoCacher.set(key, value, cacheTtlMillis);
+    catch (error) {
+      console.error(error);
+    }
+  }
 }
 
 //====================================================
 //Jisho API requester
 
-/**
- * Determines if a vocab work is common or not using the Jisho API
- * @param {*} vocab The vocab to lookup the is_common data for
- * @param {*} successCallback The callback when the Jisho request is a success. 
- * Calls back with (string vocab, nullable<bool> isCommon). True if common, false otherwise. 
- * If no data (unknown word), then undefined is returned.
- */
-function getJishoIsCommon(vocab, successCallback){
-  GM_xmlhttpRequest({
-    method: 'get',
-    url: jishoApiUrl + vocab,
-    responseType: 'json',
-    onload: function (response) {
-      //No jisho data
-      if (response.response.data.length == 0){
-        successCallback(vocab, null);
-      }
+class JishoIsCommonRequester {
+  jishoApiUrl = "https://jisho.org/api/v1/search/words?keyword=";
 
-      var isCommon = response.response.data[0].is_common;
-      successCallback(vocab, isCommon);
-    },
-    onerror: function (error) {
-      console.error('Jisho error: ', error);
-    },
-    ontimeout: function(error) {
-      console.error('Jisho timeout error: ', error);
-    }
-  });
+  /**
+   * Determines if a vocab work is common or not using the Jisho API
+   * @param {*} vocab The vocab to lookup the is_common data for
+   * Promise is called back with (string vocab, nullable<bool> isCommon). 
+   * isCommon is True if common, false otherwise.
+   * If no data (unknown word), then undefined is returned.
+   */
+  getJishoIsCommon(vocab) {
+
+    return new Promise((resolve, reject) => {
+      GM_xmlhttpRequest({
+        method: 'get',
+        url: this.jishoApiUrl + vocab,
+        responseType: 'json',
+
+        onload: function (response) {
+          //No jisho data
+          var hasNoData = response.response.data.length == 0 || 
+            response.response.data[0] == null;
+          if (hasNoData) {
+            resolve(null);
+          }
+
+          var isCommon = response.response.data[0].is_common;
+          resolve(isCommon);
+        },
+
+        onerror: function (error) {
+          console.error('Jisho error: ', error);
+          reject(error);
+        },
+        ontimeout: function (error) {
+          console.error('Jisho timeout error: ', error);
+          reject(error);
+        }
+      });
+    });
+  }
 }
+
 
 //====================================================
 // Cacher
 
-class JishoCacher{
-  //Namespace for the local storage
-  namespaceKey = 'jishoIsCommonCache';
+class IsCommonCacher {
+  //Namespace for the cache storage
+  namespaceKey;
 
-  constructor(){ }
+  constructor(namespaceKey) {
+    this.namespaceKey = namespaceKey == null ? "" : namespaceKey;
+  }
 
   set(key, val, expiryMillis) {
     //expiry time is in milliseconds
@@ -245,14 +303,15 @@ class JishoCacher{
       //Not cached
       return null;
     }
-    if (new Date().getTime() - info.time > info.exp) { 
+    if (new Date().getTime() - info.time > info.exp) {
       //Cache expired
       return null;
     }
     //Cached value
     return info.val;
   }
-  generateStorageKey(key){
+
+  generateStorageKey(key) {
     return `${this.namespaceKey}/${key}`;
   }
 }
