@@ -15,9 +15,15 @@
 
 
 function init() {
+  const CACHE_TTL_MILLIS = 1000 * 60 * 60 * 24 * 28;            //28 day cache expiry
+  const IS_COMMON_NAMESPACE = 'IsCommonCache';
+
+  var isCommonCache = new IsCommonCacher(IS_COMMON_NAMESPACE, CACHE_TTL_MILLIS);
+  var isCommonRequester = new JishoIsCommonRequester();
+  var isCommonRepository = new IsCommonRepository(isCommonRequester);
+
   var commonIndicatorUi = new CommonIndicatorUi();
-  var isCommonRepository = new IsCommonRepository();
-  var commonIndicatorController = new CommonIndicatorController(commonIndicatorUi, isCommonRepository);
+  var commonIndicatorController = new CommonIndicatorController(commonIndicatorUi, isCommonRepository, isCommonCache);
 
   console.log('WK Common Vocab Indicator started');
 
@@ -165,12 +171,11 @@ class CommonIndicatorController {
   commonIndicatorView;
   isCommonRepository;
   isCommonCache;
-  cacheTtlMillis = 1000 * 60 * 60 * 24 * 28;            //28 day cache expiry
 
-  constructor(commonIndicatorView, isCommonRepository) {
+  constructor(commonIndicatorView, isCommonRepository, isCommonCache) {
     this.commonIndicatorView = commonIndicatorView;
     this.isCommonRepository = isCommonRepository;
-    this.isCommonCache = new IsCommonCacher('IsCommonCache', this.cacheTtlMillis);
+    this.isCommonCache = isCommonCache;
 
     this.commonIndicatorView.bindItemChangedEvent((key) => {
       this.itemChangedEvent(key);
@@ -209,8 +214,8 @@ class CommonIndicatorController {
 
 class IsCommonRepository {
 
-  constructor() {
-    this.isCommonRequester = new JishoIsCommonRequester();
+  constructor(isCommonRequester) {
+    this.isCommonRequester = isCommonRequester;
   }
 
   async getIsCommon(requestedVocab, callback) {
@@ -238,6 +243,9 @@ class IsCommonRepository {
 
 class JishoIsCommonRequester {
   jishoApiUrl = "https://jisho.org/api/v1/search/words?keyword=";
+
+  constructor(){
+  }
 
   /**
    * Determines if a vocab work is common or not using the Jisho API
