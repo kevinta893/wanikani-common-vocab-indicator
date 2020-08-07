@@ -2,9 +2,9 @@
 
 Userscript for TamperMonkey. Use with Wanikani.com during reviews and lessons. 
 
-Original Script Author: dtwigs
-A "fork" of https://community.wanikani.com/t/new-user-script-common-vocabulary-indicator/19692
+Original Script Author: *dtwigs*
 
+A "fork" of https://community.wanikani.com/t/new-user-script-common-vocabulary-indicator/19692
 
 ## Changes from original
 
