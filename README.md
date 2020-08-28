@@ -2,6 +2,7 @@
 
 Userscript for TamperMonkey. Use with Wanikani.com during reviews and lessons. 
 
+Discuss this userscript at [[Userscript] Wanikani Common Vocab Indicator - Updated](https://community.wanikani.com/t/userscript-wanikani-common-vocab-indicator-updated/45638)
 
 Original Script Author: *dtwigs*
 
